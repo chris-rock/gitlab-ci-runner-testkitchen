@@ -36,8 +36,8 @@ RUN rm -rf /tmp/ruby
 RUN echo "gem: --no-rdoc --no-ri" >> /usr/local/etc/gemrc
 
 # Fix upstart under a virtual host https://github.com/dotcloud/docker/issues/1024
-RUN dpkg-divert --local --rename --add /sbin/initctl
-RUN ln -s /bin/true /sbin/initctl
+# RUN dpkg-divert --local --rename --add /sbin/initctl
+# RUN ln -s /bin/true /sbin/initctl
 
 # Set the right locale
 RUN echo "LC_ALL=\"en_US.UTF-8\"" >> /etc/default/locale
@@ -56,8 +56,16 @@ RUN cd /gitlab-ci-runner && gem install bundler && bundle install
 
 # Install test-kitchen with all drivers:
 RUN gem install test-kitchen
+RUN gem install berkshelf
 RUN gem install unf
-RUN kitchen driver discover | awk '/kitchen-/ {print $1}' | xargs gem install
+
+# RUN kitchen driver discover | awk '/kitchen-/ {print $1}' | xargs gem install
+
+# Install kitchen-openstack with fix for floating ips
+RUN gem uninstall kitchen-openstack
+RUN git clone https://github.com/TelekomLabs/kitchen-openstack.git /kitchen-openstack
+RUN cd /kitchen-openstack && gem build kitchen-openstack.gemspec
+RUN cd /kitchen-openstack && gem install kitchen-openstack-1.3.1.dev.gem
 
 # create a volume for ssh keys
 VOLUME /private
